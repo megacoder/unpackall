@@ -36,7 +36,6 @@ alias::
 	cd "${BINDIR}";							\
 	for a in ${ALIASES}; do						\
 		if [[ "$${a}" != 'untar' ]]; then			\
-			echo -e "\t$${a}";				\
 			/bin/ln -svf ./untar "$${a}";			\
 		fi;							\
 	done
