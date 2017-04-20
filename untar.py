@@ -30,7 +30,7 @@ class	UnpackAll( object ):
 			),
 			unsos = dict(
 				prefix  = 'SOS',
-				glob    = re.compile( r'.*tar.*' ),
+				glob    = re.compile( r'sosreport.*tar.*' ),
 				explode = True
 			),
 			unvmpinfo = dict(
