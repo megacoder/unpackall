@@ -18,6 +18,11 @@ class	UnpackAll( object ):
 				glob    = re.compile( r'.*' ),
 				explode = True
 			),
+			unarchive = dict(
+				prefix	= 'ARCHIVE',
+				glob    = re.compile( r'.*tar.*' ),
+				explode = True
+			),
 			unsos = dict(
 				prefix  = 'SOS',
 				glob    = re.compile( r'.*tar.*' ),
@@ -232,13 +237,28 @@ if __name__ == '__main__':
 	)[0]
 	version = '1.0.0'
 	ua = UnpackAll( variant = prog )
-	variants = '", "'.join( ua.get_variants() )
+	variants = ua.get_variants()
+	class	UntarParser( OptionParser ):
+		def	format_epilog( self, formatter ):
+			return self.epilog
 	ua = None
-	p = OptionParser(
+	p = UntarParser(
 		prog    = prog,
 		version = version,
 		usage   = '{0} [options] [tar ..]'.format( prog ),
-		epilog = 'The available variants are "{0}".'.format( variants )
+		epilog = '\n'.join(
+			[ '', 'The available variants are:' ] +
+			[ '    {0}'.format( v ) for v in sorted( variants ) ] +
+			[ '' ],
+		),
+	)
+	p.add_option(
+		'-a',
+		'--alias',
+		dest = 'only_alias',
+		default = False,
+		action = 'store_true',
+		help = 'list aliases, one per line, and exit'
 	)
 	p.add_option(
 		'-l',
@@ -265,6 +285,10 @@ if __name__ == '__main__':
 		help    = 'personality; default is "{0}"'.format( prog )
 	)
 	opts,candidates = p.parse_args()
+	if opts.only_alias:
+		for variety in variants:
+			print '{0}'.format( variety )
+		exit( 0 )
 	ua = UnpackAll( variant = opts.role, verbose = opts.verbose )
 	if len(candidates) == 0:
 		candidates, err = ua.scandir()
