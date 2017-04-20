@@ -75,7 +75,6 @@ class	UnpackAll( object ):
 		except Exception, e:
 			candidates = None
 			err = traceback.format_exc()
-		print 'located {0}'.format( candidates )
 		return candidates, err
 
 	def	do_cmd( self, cmd, show = True ):
