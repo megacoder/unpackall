@@ -1,4 +1,4 @@
-TARGETS=alias check clean clobber distclean install links uninstall
+TARGETS=all alias check clean clobber distclean install uninstall
 TARGET=all
 
 PREFIX	=${DESTDIR}/opt
@@ -32,7 +32,7 @@ ALIASES	:= $(shell python ./untar.py --alias)
 vars::
 	echo "ALIASES=${ALIASES}"
 
-links::
+alias::
 	cd "${BINDIR}";							\
 	for a in ${ALIASES}; do						\
 		if [[ "$${a}" != 'untar' ]]; then			\
@@ -42,7 +42,7 @@ links::
 	done
 
 uninstall::
-	${RM} ${BINDIR}/untar
+	cd "${BINDIR}" && ${RM} untar ${ALIASES}
 
 ifneq	(,${SUBDIRS})
 ${TARGETS}::
