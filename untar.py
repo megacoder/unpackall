@@ -18,6 +18,11 @@ class	UnpackAll( object ):
 				glob    = re.compile( r'.*' ),
 				explode = True
 			),
+			unosw = dict(
+				prefix	= 'UNOSW',
+				glob    = re.compile( r'osw.*tar.*' ),
+				explode = True
+			),
 			unarchive = dict(
 				prefix	= 'ARCHIVE',
 				glob    = re.compile( r'.*tar.*' ),
