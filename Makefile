@@ -35,9 +35,10 @@ vars::
 alias::
 	cd "${BINDIR}";							\
 	for a in ${ALIASES}; do						\
-		if [[ "$${a}" != 'untar' ]]; then			\
-			/bin/ln -svf ./untar "$${a}";			\
-		fi;							\
+		case "$${a}" in						\
+		default | untar )	;;				\
+		* ) /bin/ln -svf ./untar "$${a}";;			\
+		esac;							\
 	done
 
 uninstall::
