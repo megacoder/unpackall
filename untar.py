@@ -67,13 +67,10 @@ class	UnpackAll( object ):
 	def	scandir( self, dirname = '.' ):
 		candidates = []
 		err = None
-		print 'glob = {0}'.format( self.glob.pattern )
 		try:
 			for entry in sorted( os.listdir( dirname ) ):
-				print 'considered {0}'.format( entry )
 				mo = self.glob.search( entry )
 				if mo:
-					print mo.groups()
 					candidates.append( entry )
 		except Exception, e:
 			candidates = None
