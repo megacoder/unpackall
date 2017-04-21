@@ -8,46 +8,51 @@ import	traceback
 import	re
 import	stat
 
+class	AttrDict( dict ):
+
+	def	__init__( self, *args, **kwargs ):
+		super( AttrDict, self ).__init__( *args, **kwargs )
+		self.__dict__ = self
+		return
+	def	has_name( self, name ):
+		return name in self.__dict__
+
 class	UnpackAll( object ):
 
 	def	__init__( self, variant = 'unvmpinfo', verbose = 0, perms = False ):
-		self.perms = perms
+		self.perms    = perms
+		self.variant  = None
 		self.variants = dict(
-			default = dict(
+			default = AttrDict(
 				prefix  = 'DUNNO',
 				glob    = re.compile( r'.*' ),
 				explode = True
 			),
-			unosw = dict(
+			unosw = AttrDict(
 				prefix	= 'UNOSW',
 				glob    = re.compile( r'osw.*tar.*' ),
 				explode = True
 			),
-			unarchive = dict(
+			unarchive = AttrDict(
 				prefix	= 'ARCHIVE',
 				glob    = re.compile( r'.*tar.*' ),
 				explode = True
 			),
-			unsos = dict(
+			unsos = AttrDict(
 				prefix  = 'SOS',
 				glob    = re.compile( r'sosreport.*tar.*' ),
 				explode = True
 			),
-			unvmpinfo = dict(
+			unvmpinfo = AttrDict(
 				prefix  = 'VMPINFO',
 				glob    = re.compile( r'.*vmpinfo.*tar.*' ),
 				explode = True
 			),
-			untar = dict(
+			untar = AttrDict(
 				prefix  = 'UNTAR',
 				glob    = re.compile( r'.*tar.*' ),
 				explode = True
 			),
-		)
-		self.exploders = dict(
-			xz  = 'J',
-			bz2 = 'j',
-			gz  = 'z'
 		)
 		self.set_variant( variant )
 		return
@@ -59,9 +64,10 @@ class	UnpackAll( object ):
 		prog, ext    = os.path.splitext( arg0 )
 		if prog not in self.variants:
 			prog = 'default'
-		self.prefix  = self.variants[prog].get('prefix', 'UNPACKED' )
-		self.explode = self.variants[prog].get('explode', True )
-		self.glob    = self.variants[prog].get('glob', r'.*tar.*' )
+		self.variant = self.variants[prog]
+		# self.variant.prefix  = self.variants[prog].get('prefix', 'UNPACKED' )
+		# self.variant.explode = self.variants[prog].get('explode', True )
+		# self.variant.glob    = self.variants[prog].get('glob', r'.*tar.*' )
 		return
 
 	def	scandir( self, dirname = '.' ):
@@ -69,7 +75,7 @@ class	UnpackAll( object ):
 		err = None
 		try:
 			for entry in sorted( os.listdir( dirname ) ):
-				mo = self.glob.search( entry )
+				mo = self.variant.glob.search( entry )
 				if mo:
 					candidates.append( entry )
 		except Exception, e:
@@ -183,7 +189,7 @@ class	UnpackAll( object ):
 			return
 		root = root[:ext]
 		where = os.path.join(
-			self.prefix,
+			self.variant.prefix,
 			root
 		)
 		try:
