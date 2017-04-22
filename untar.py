@@ -1,12 +1,13 @@
 #!/usr/bin/python
 # vim: filetype=python noet sw=4 ts=4
 
-import	sys
+import	hashlib
 import	os
-import	subprocess
-import	traceback
 import	re
 import	stat
+import	subprocess
+import	sys
+import	traceback
 
 class	AttrDict( dict ):
 
@@ -14,44 +15,52 @@ class	AttrDict( dict ):
 		super( AttrDict, self ).__init__( *args, **kwargs )
 		self.__dict__ = self
 		return
+
 	def	has_name( self, name ):
 		return name in self.__dict__
 
 class	UnpackAll( object ):
 
-	def	__init__( self, variant = 'unvmpinfo', verbose = 0, perms = False ):
+	def	__init__( self, variant = 'untar', verbose = False, perms = False ):
+		self.set_verbose( verbose )
 		self.perms    = perms
 		self.variant  = None
 		self.variants = dict(
 			default = AttrDict(
 				prefix  = 'DUNNO',
 				glob    = re.compile( r'.*' ),
-				explode = True
+				explode = True,
+				md5		= True,
 			),
 			unosw = AttrDict(
 				prefix	= 'UNOSW',
 				glob    = re.compile( r'osw.*tar.*' ),
-				explode = True
+				explode = True,
+				md5		= True,
 			),
 			unarchive = AttrDict(
 				prefix	= 'ARCHIVE',
 				glob    = re.compile( r'.*tar.*' ),
-				explode = True
+				explode = True,
+				md5		= True,
 			),
 			unsos = AttrDict(
 				prefix  = 'SOS',
 				glob    = re.compile( r'sosreport.*tar.*' ),
-				explode = True
+				explode = True,
+				md5		= True,
 			),
 			unvmpinfo = AttrDict(
 				prefix  = 'VMPINFO',
 				glob    = re.compile( r'.*vmpinfo.*tar.*' ),
-				explode = True
+				explode = True,
+				md5		= True,
 			),
 			untar = AttrDict(
 				prefix  = 'UNTAR',
 				glob    = re.compile( r'.*tar.*' ),
-				explode = True
+				explode = True,
+				md5		= True,
 			),
 		)
 		self.set_variant( variant )
@@ -70,6 +79,29 @@ class	UnpackAll( object ):
 		# self.variant.glob    = self.variants[prog].get('glob', r'.*tar.*' )
 		return
 
+	def	set_verbose( self, level = None ):
+		if isinstance( level, bool ):
+			self.verbose = 1 if level else 0
+		elif isinstance( level, int ):
+			try:
+				self.verbose += level
+			except:
+				self.verbose = level
+		else:
+			raise ValueError
+		return
+
+	def	get_verbose( self ):
+		return self.verbose
+
+	def	is_verbose( self, needed = 1 ):
+		return True if self.verbose >= needed else False
+
+	def	_chatter( self, s ):
+		if self.is_verbose():
+			print s
+		return
+
 	def	scandir( self, dirname = '.' ):
 		candidates = []
 		err = None
@@ -81,11 +113,16 @@ class	UnpackAll( object ):
 		except Exception, e:
 			candidates = None
 			err = traceback.format_exc()
-		return candidates, err
+		self._chatter( 'scanned "{0}", found candidates "{1}"'.format(
+			dirname,
+			candidates
+		) )
+		return err, candidates
 
 	def	do_cmd( self, cmd, show = True ):
-		cli = ' '.join( cmd )
-		print '  {0}'.format( cli )
+		if self.is_verbose():
+			cli = ' '.join( cmd )
+			self._chatter( '  {0}'.format( cli ) )
 		try:
 			p = subprocess.Popen(
 				cmd,
@@ -106,7 +143,7 @@ class	UnpackAll( object ):
 			if msg and len(msg) > 0:
 				for line in msg.splitlines():
 					print '  {0}'.format( line )
-		return msg, err
+		return err, msg
 
 	def	do_tar( self, tn, where ):
 		worked = False
@@ -119,7 +156,7 @@ class	UnpackAll( object ):
 				'-x{0}f'.format( method ),
 				tn
 			]
-			msg, err = self.do_cmd( cmd, show = False )
+			err, msg = self.do_cmd( cmd, show = False )
 			if not err:
 				worked = True
 				break
@@ -134,6 +171,7 @@ class	UnpackAll( object ):
 		# Explode any tarballs we find in this directory
 		rescan = True
 		while rescan:
+			self._chatter( 'Scanning subtree {0}'.format( dirname ) )
 			rescan = False
 			for entry in sorted( os.listdir( dirname ) ):
 				name = os.path.join( dirname, entry )
@@ -144,6 +182,9 @@ class	UnpackAll( object ):
 					# Begin with the filename extension
 					where, ext = os.path.splitext( name )
 					if name.endswith( '.zip' ):
+						self._chatter(
+							'Detected ZIP file {0}'.format( name )
+						)
 						try:
 							os.makedirs( where )
 						except:
@@ -154,7 +195,7 @@ class	UnpackAll( object ):
 							'-u',
 							name
 						]
-						msg, err = self.do_cmd( cmd )
+						err, msg = self.do_cmd( cmd )
 						if not err:
 							try:
 								os.unlink( name )
@@ -163,6 +204,9 @@ class	UnpackAll( object ):
 					else:
 						root = name.find( '.tar' )
 						if root < 0: continue
+						self._chatter(
+							'Detected tar archive {0}'.format( name )
+						)
 						where = name[:root]
 						try:
 							os.makedirs( where )
@@ -193,10 +237,16 @@ class	UnpackAll( object ):
 			root
 		)
 		try:
+			self._chatter(
+				'Creating result tree {0}'.format( where )
+			)
 			os.makedirs( where )
 		except:
 			pass
 		if self.do_tar( fn, where ):
+			self._chatter(
+				'Processing extracted subtree {0}'.format( where )
+			)
 			self.subtree( where )
 		if self.perms:
 			try:
@@ -214,6 +264,12 @@ class	UnpackAll( object ):
 				)
 				for name in sorted( dirs ):
 					pn = os.path.join( rootdir, name )
+					sehf._chatter(
+						'Setting new dir permissions {0}: {1:04o}'.format(
+							pn,
+							perm
+						)
+					)
 					try:
 						os.chmod( pn, perm )
 					except Exception, e:
@@ -228,9 +284,61 @@ class	UnpackAll( object ):
 				for name in sorted( files ):
 					pn = os.path.join( rootdir, name )
 					try:
-						os.chmod( pn, 0666 )
+						self._chatter(
+							'File {0} new permissions: {1:04o}'.format(
+								pn,
+								perm
+							)
+						)
+						os.chmod( pn, perm )
 					except Exception, e:
 						pass
+			if self.variant.md5:
+				self._chatter( 'Scanning for MD5 checksum files.' )
+				for rootdir,dirs,files in os.walk( where ):
+					mf5sums = [
+						f for f in files if f.endswith( '.md5' )
+					]
+					for md5sum in md5sums:
+						err = True
+						output = '*** MD5SUM mismatch ***'
+						realfile, _ = os.path.splitext( file )
+						real_fn = os.path.join(
+							rootdir,
+							realfile
+						)
+						self._chatter(
+							'Checking {0}'.format( real_fn )
+						)
+						hash = hashlib.md5()
+						with open( real_fn, 'rb' ) as f:
+							for chunk in iter( f.read, 4096 ):
+								hash.update( chunk )
+						calc_hash = hash.hexdigest()
+						md5_fn = os.path.join(
+							rootdir,
+							md5sum
+						)
+						with open( md5_fm ) as f:
+							tokens = f.readline().split()
+							self._chatter(
+								'File {0}: calc[{1}], real[{2}]'.format(
+									md5_fn,
+									calc_hash,
+									tokens[0]
+								)
+							)
+							if len(tokens) and tokens[0] == calc_hash:
+								err = False
+						if err:
+							print '  *** {0}'.format(
+								'MD5 checksum not verified: "{0}"'.format(
+									os.path.join(
+										rootdir,
+										realfile
+								   )
+							   )
+						   )
 		return
 
 	def	report( self ):
@@ -291,6 +399,14 @@ if __name__ == '__main__':
 		default = prog,
 		help    = 'personality; default is "{0}"'.format( prog )
 	)
+	p.add_option(
+		'-v',
+		'--verbose',
+		dest = 'verbose',
+		default = False,
+		action = 'store_true',
+		help = 'announce actions being taken'
+	)
 	opts,candidates = p.parse_args()
 	if opts.only_alias:
 		for variety in variants:
@@ -298,7 +414,7 @@ if __name__ == '__main__':
 		exit( 0 )
 	ua = UnpackAll( variant = opts.role, verbose = opts.verbose )
 	if len(candidates) == 0:
-		candidates, err = ua.scandir()
+		err, candidates = ua.scandir()
 		if err:
 			print >>sys.stderr, err
 			print >>sys.stderr, "No arguments and no candidates found."
