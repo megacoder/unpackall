@@ -14,11 +14,13 @@ endif
 
 .PHONY: ${TARGETS} ${SUBDIRS}
 
-all::	untar.py
+all::	untar.py sample.tar.gz sample.tar.gz.md5
 
 ${TARGETS}::
 
 clobber distclean:: clean
+
+ARGS	= sample.tar.gz
 
 check::	untar.py
 	./untar.py ${ARGS}
@@ -43,6 +45,12 @@ alias::
 
 uninstall::
 	cd "${BINDIR}" && ${RM} untar ${ALIASES}
+
+.PHONY:	sample
+
+sample.tar.gz sample.tar.md5:: sample
+	tar -zcf $@ sample
+	md5sum sample.tar.gz >sample.tar.gz.md5
 
 ifneq	(,${SUBDIRS})
 ${TARGETS}::
