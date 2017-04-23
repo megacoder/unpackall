@@ -21,59 +21,88 @@ class	AttrDict( dict ):
 
 class	UnpackAll( object ):
 
+	VARIANTS = dict(
+		default = AttrDict(
+			prefix  = 'DUNNO',
+			glob    = re.compile( r'.*' ),
+			explode = True,
+			md5     = True,
+			info    = 'anonymous tarball'
+		),
+		unosw = AttrDict(
+			prefix  = 'UNOSW',
+			glob    = re.compile( r'osw.*tar.*' ),
+			explode = True,
+			md5     = True,
+			info    = 'OSWatcher tarball'
+		),
+		unarchive = AttrDict(
+			prefix	= 'ARCHIVE',
+			glob    = re.compile( r'.*tar.*' ),
+			explode = True,
+			md5		= True,
+			info	= 'OSWatcher archives'
+		),
+		unsos = AttrDict(
+			prefix  = 'SOS',
+			glob    = re.compile( r'sosreport.*tar.*' ),
+			explode = True,
+			md5		= True,
+			info	= 'SOSREPORT archives'
+		),
+		unvmpinfo = AttrDict(
+			prefix  = 'VMPINFO',
+			glob    = re.compile( r'.*vmpinfo.*tar.*' ),
+			explode = True,
+			md5		= True,
+			info	= 'VMPINFO3 archive'
+		),
+		untar = AttrDict(
+			prefix  = 'UNTAR',
+			glob    = re.compile( r'.*tar.*' ),
+			explode = True,
+			md5		= True,
+			info	= 'generic tar(1) archive'
+		),
+	)
+
 	def	__init__( self, variant = 'untar', verbose = False, perms = False ):
 		self.set_verbose( verbose )
 		self.perms    = perms
-		self.variant  = None
-		self.variants = dict(
-			default = AttrDict(
-				prefix  = 'DUNNO',
-				glob    = re.compile( r'.*' ),
-				explode = True,
-				md5		= True,
-			),
-			unosw = AttrDict(
-				prefix	= 'UNOSW',
-				glob    = re.compile( r'osw.*tar.*' ),
-				explode = True,
-				md5		= True,
-			),
-			unarchive = AttrDict(
-				prefix	= 'ARCHIVE',
-				glob    = re.compile( r'.*tar.*' ),
-				explode = True,
-				md5		= True,
-			),
-			unsos = AttrDict(
-				prefix  = 'SOS',
-				glob    = re.compile( r'sosreport.*tar.*' ),
-				explode = True,
-				md5		= True,
-			),
-			unvmpinfo = AttrDict(
-				prefix  = 'VMPINFO',
-				glob    = re.compile( r'.*vmpinfo.*tar.*' ),
-				explode = True,
-				md5		= True,
-			),
-			untar = AttrDict(
-				prefix  = 'UNTAR',
-				glob    = re.compile( r'.*tar.*' ),
-				explode = True,
-				md5		= True,
-			),
-		)
 		self.set_variant( variant )
 		return
 
 	def	get_variants( self ):
-		return self.variants
+		key_width = max(
+			map(
+				len,
+				UnpackAll.VARIANTS.keys()
+			)
+		) + 1
+		prefix_width = max(
+			map(
+				len,
+				[ UnpackAll.VARIANTS[key].prefix for key in UnpackAll.VARIANTS ]
+			)
+		)
+		fmt = '{{0:>{0}}}  {{1:<{1}}}  {{2}}'.format(
+			key_width,
+			prefix_width
+		)
+		for key in sorted( UnpackAll.VARIANTS ):
+			v = UnpackAll.VARIANTS[key]
+			yield fmt.format(
+				key + ':',
+				v.prefix,
+				v.info,
+			)
+		return
 
 	def	set_variant( self, arg0 = 'default' ):
 		prog, ext    = os.path.splitext( arg0 )
-		if prog not in self.variants:
+		if prog not in UnpackAll.VARIANTS:
 			prog = 'default'
-		self.variant = self.variants[prog]
+		self.variant = UnpackAll.VARIANTS[prog]
 		return
 
 	def	set_md5_check( self, want = True ):
@@ -353,8 +382,8 @@ if __name__ == '__main__':
 	prog = os.path.splitext(
 		os.path.basename( sys.argv[0] )
 	)[0]
-	version = '1.0.0'
-	ua = UnpackAll( variant = prog )
+	version  = '1.0.0'
+	ua       = UnpackAll( variant = prog )
 	variants = ua.get_variants()
 	class	UntarParser( OptionParser ):
 		def	format_epilog( self, formatter ):
