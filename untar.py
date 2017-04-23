@@ -74,10 +74,13 @@ class	UnpackAll( object ):
 		if prog not in self.variants:
 			prog = 'default'
 		self.variant = self.variants[prog]
-		# self.variant.prefix  = self.variants[prog].get('prefix', 'UNPACKED' )
-		# self.variant.explode = self.variants[prog].get('explode', True )
-		# self.variant.glob    = self.variants[prog].get('glob', r'.*tar.*' )
 		return
+
+	def	set_md5_check( self, want = True ):
+		self.variant.md5 = want
+
+	def	get_md5_check( self ):
+		return self.variant.md5
 
 	def	set_verbose( self, level = None ):
 		if isinstance( level, bool ):
@@ -384,6 +387,14 @@ if __name__ == '__main__':
 		help    = 'list individual files extracted from a tar(1) archive'
 	)
 	p.add_option(
+		'-m',
+		'--md5',
+		dest = 'want_md5',
+		default = False,
+		action = 'store_true',
+		help = 'use .md5 files to validate extracted files'
+	)
+	p.add_option(
 		'-p',
 		'--perms',
 		dest    ='perms',
@@ -413,6 +424,7 @@ if __name__ == '__main__':
 			print '{0}'.format( variety )
 		exit( 0 )
 	ua = UnpackAll( variant = opts.role, verbose = opts.verbose )
+	ua.set_md5_check( opts.want_md5 )
 	if len(candidates) == 0:
 		err, candidates = ua.scandir()
 		if err:
