@@ -371,6 +371,49 @@ class	UnpackAll( object ):
 								   )
 							   )
 						   )
+			if self.variant.explode:
+				self._chatter( 'Scanning for compressed files.' )
+				suffixes = dict({
+					'.dat.bz2' : [
+						'/bin/bzip2',
+						'--decompress',
+						'--force',
+						'--keep',
+						'--quiet',
+						'--',
+					],
+					'.dat.gz' : [
+						'/bin/gzip',
+						'--decompress',
+						'--force',
+						'--keep',
+						'--quiet',
+						'--',
+					],
+				})
+				for rootdir,dirs,files in os.walk( where ):
+					cmd = None
+					for file in files:
+						for suffix in suffixes:
+							if file.endswith( suffix ):
+								cmd = suffixes[suffix] + [
+									os.path.join( where, file )
+								]
+								break
+					if cmd:
+						err = True
+						try:
+							output = self.do_cmd( cmd )
+							err = False
+						except subprocess.CalledProcessError, e:
+							output = e.output
+						except Exception, e:
+							print >>sys.stderr, 'Cannot uncompress {0}'.format(
+								os.path.join( where, file )
+							)
+							raise e
+						if err:
+							self.show_output( err, output )
 		return
 
 	def	report( self ):
