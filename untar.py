@@ -325,95 +325,99 @@ class	UnpackAll( object ):
 						os.chmod( pn, perm )
 					except Exception, e:
 						pass
-			if self.variant.md5:
-				self._chatter( 'Scanning for MD5 checksum files.' )
-				for rootdir,dirs,files in os.walk( where ):
-					mf5sums = [
-						f for f in files if f.endswith( '.md5' )
-					]
-					for md5sum in md5sums:
-						err = True
-						output = '*** MD5SUM mismatch ***'
-						realfile, _ = os.path.splitext( file )
-						real_fn = os.path.join(
-							rootdir,
-							realfile
-						)
+		if self.variant.md5:
+			self._chatter( 'Scanning for MD5 checksum files.' )
+			for rootdir,dirs,files in os.walk( where ):
+				mf5sums = [
+					f for f in files if f.endswith( '.md5' )
+				]
+				for md5sum in md5sums:
+					err = True
+					output = '*** MD5SUM mismatch ***'
+					realfile, _ = os.path.splitext( file )
+					real_fn = os.path.join(
+						rootdir,
+						realfile
+					)
+					self._chatter(
+						'Checking {0}'.format( real_fn )
+					)
+					hash = hashlib.md5()
+					with open( real_fn, 'rb' ) as f:
+						for chunk in iter( f.read, 4096 ):
+							hash.update( chunk )
+					calc_hash = hash.hexdigest()
+					md5_fn = os.path.join(
+						rootdir,
+						md5sum
+					)
+					with open( md5_fm ) as f:
+						tokens = f.readline().split()
 						self._chatter(
-							'Checking {0}'.format( real_fn )
-						)
-						hash = hashlib.md5()
-						with open( real_fn, 'rb' ) as f:
-							for chunk in iter( f.read, 4096 ):
-								hash.update( chunk )
-						calc_hash = hash.hexdigest()
-						md5_fn = os.path.join(
-							rootdir,
-							md5sum
-						)
-						with open( md5_fm ) as f:
-							tokens = f.readline().split()
-							self._chatter(
-								'File {0}: calc[{1}], real[{2}]'.format(
-									md5_fn,
-									calc_hash,
-									tokens[0]
-								)
+							'File {0}: calc[{1}], real[{2}]'.format(
+								md5_fn,
+								calc_hash,
+								tokens[0]
 							)
-							if len(tokens) and tokens[0] == calc_hash:
-								err = False
-						if err:
-							print '  *** {0}'.format(
-								'MD5 checksum not verified: "{0}"'.format(
-									os.path.join(
-										rootdir,
-										realfile
-								   )
+						)
+						if len(tokens) and tokens[0] == calc_hash:
+							err = False
+					if err:
+						print '  *** {0}'.format(
+							'MD5 checksum not verified: "{0}"'.format(
+								os.path.join(
+									rootdir,
+									realfile
 							   )
 						   )
-			if self.variant.explode:
-				self._chatter( 'Scanning for compressed files.' )
-				suffixes = dict({
-					'.dat.bz2' : [
-						'/bin/bzip2',
-						'--decompress',
-						'--force',
-						'--keep',
-						'--quiet',
-						'--',
-					],
-					'.dat.gz' : [
-						'/bin/gzip',
-						'--decompress',
-						'--force',
-						'--keep',
-						'--quiet',
-						'--',
-					],
-				})
-				for rootdir,dirs,files in os.walk( where ):
-					cmd = None
-					for file in files:
-						for suffix in suffixes:
-							if file.endswith( suffix ):
-								cmd = suffixes[suffix] + [
-									os.path.join( where, file )
-								]
-								break
-					if cmd:
-						err = True
-						try:
-							output = self.do_cmd( cmd )
-							err = False
-						except subprocess.CalledProcessError, e:
-							output = e.output
-						except Exception, e:
-							print >>sys.stderr, 'Cannot uncompress {0}'.format(
+					   )
+		if self.variant.explode:
+			self._chatter(
+				'Scanning subtree {0} for compressed files.'.format(
+					where
+				)
+			)
+			suffixes = dict({
+				'.dat.bz2' : [
+					'/bin/bzip2',
+					'--decompress',
+					'--force',
+					'--keep',
+					'--quiet',
+					'--',
+				],
+				'.dat.gz' : [
+					'/bin/gzip',
+					'--decompress',
+					'--force',
+					'--keep',
+					'--quiet',
+					'--',
+				],
+			})
+			for rootdir,dirs,files in os.walk( where ):
+				cmd = None
+				for file in files:
+					for suffix in suffixes:
+						if file.endswith( suffix ):
+							cmd = suffixes[suffix] + [
 								os.path.join( where, file )
-							)
-							raise e
-						if err:
-							self.show_output( err, output )
+							]
+							break
+				if cmd:
+					err = True
+					try:
+						output = self.do_cmd( cmd )
+						err = False
+					except subprocess.CalledProcessError, e:
+						output = e.output
+					except Exception, e:
+						print >>sys.stderr, 'Cannot uncompress {0}'.format(
+							os.path.join( where, file )
+						)
+						raise e
+					if err:
+						self.show_output( err, output )
 		return
 
 	def	report( self ):
