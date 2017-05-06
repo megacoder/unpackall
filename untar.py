@@ -149,7 +149,7 @@ class	UnpackAll( object ):
 			dirname,
 			candidates
 		) )
-		return err, candidates
+		return candidates, err
 
 	def	do_cmd( self, cmd, show = True ):
 		if self.is_verbose():
@@ -175,7 +175,7 @@ class	UnpackAll( object ):
 			if msg and len(msg) > 0:
 				for line in msg.splitlines():
 					print '  {0}'.format( line )
-		return err, msg
+		return msg, err
 
 	def	do_tar( self, tn, where ):
 		worked = False
@@ -188,7 +188,7 @@ class	UnpackAll( object ):
 				'-x{0}f'.format( method ),
 				tn
 			]
-			err, msg = self.do_cmd( cmd, show = False )
+			msg, err = self.do_cmd( cmd, show = False )
 			if not err:
 				worked = True
 				break
@@ -227,7 +227,7 @@ class	UnpackAll( object ):
 							'-u',
 							name
 						]
-						err, msg = self.do_cmd( cmd )
+						msg, err = self.do_cmd( cmd )
 						if not err:
 							try:
 								os.unlink( name )
@@ -502,7 +502,7 @@ if __name__ == '__main__':
 	ua = UnpackAll( variant = opts.role, verbose = opts.verbose )
 	ua.set_md5_check( opts.want_md5 )
 	if len(candidates) == 0:
-		err, candidates = ua.scandir()
+		candidates, err = ua.scandir()
 		if err:
 			print >>sys.stderr, err
 			print >>sys.stderr, "No arguments and no candidates found."
