@@ -234,7 +234,13 @@ class	UnpackAll( object ):
 							except:
 								pass
 					else:
+						# Most tarballs are correctly identified as ".tar*"
 						root = name.find( '.tar' )
+						if root < 0:
+							# But some lamebrains decided this was
+							# cuter: foo.tgz without reailzing this
+							# method is for baby-training-wheels MSDOS
+							root = name.find( '.tgz' )
 						if root < 0: continue
 						self._chatter(
 							'Detected tar archive {0}'.format( name )
