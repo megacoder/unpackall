@@ -102,6 +102,10 @@ class	UnpackAll( object ):
 		return
 
 	def	get_variants( self ):
+		if not self.verbose:
+			for variant in sorted( UnpackAll.VARIANTS.keys() ):
+				yield variant
+			return
 		key_width = max(
 			map(
 				len,
@@ -558,11 +562,11 @@ if __name__ == '__main__':
 		help = 'announce actions being taken'
 	)
 	opts,candidates = p.parse_args()
+	ua = UnpackAll( variant = opts.role, verbose = opts.verbose )
 	if opts.only_alias:
-		for variety in variants:
+		for variety in ua.get_variants():
 			print '{0}'.format( variety )
 		exit( 0 )
-	ua = UnpackAll( variant = opts.role, verbose = opts.verbose )
 	ua.set_md5_check( opts.want_md5 )
 	if len(candidates) == 0:
 		candidates, err = ua.scandir()
