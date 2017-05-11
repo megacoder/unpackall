@@ -370,14 +370,14 @@ class	UnpackAll( object ):
 		if self.variant.md5:
 			self._chatter( 'Scanning for MD5 checksum files.' )
 			inode_check = InodeCheck()
-			for rootdir,dirs,files in walker.walk( where ):
+			for rootdir,dirs,files in os.walk( where ):
 				# Elide visited directories
 				for dir in dirs:
 					path = os.path.join( rootdir, dir )
 					if not inode_check.consider( path ):
 						dirs.remove( dir )
 				# Get list of md5sum(1) files
-				mf5sums = [
+				md5sums = [
 					name for name in files if name.endswith( '.md5' )
 				]
 				for md5sum in md5sums:
