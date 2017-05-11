@@ -9,34 +9,34 @@ import	subprocess
 import	sys
 import	traceback
 
-class	Walker( object ):
+class	InodeCheck( object ):
 
 	def	__init__( self ):
-		pass
+		self.inodes = dict()
 
-	def	walk(
-		self, top, topdown = True, onerror = None, followlinks = False
-	 ):
-		inodes = dict()
-		for rootdir,dirs,files in os.walk(
-			top,
-			topdown     = topdown,
-			onerror     = onerror,
-			followlinks = followlinks
-		):
-			for dir in dirs:
-				dn = os.path.join( rootdir, dir )
-				try:
-					st = os.stat( dn )
-				except Exception, e:
-					continue
-				inode = ( st.st_dev, st.st_ino )
-				if inode in inodes:
-					dirs.remove( dir )
-				else:
-					inodes[ inode ] = 0
-			yield rootdir,dirs,files
-		return
+	def	consider( self, path ):
+		keep = False
+		try:
+			st = os.stat( path )
+			inode = ( st.st_dev, st.st_ino )
+			if inode not in self.inodes:
+				self.inodes[ inode ] = True
+				keep = True
+		except Exception, e:
+			pass
+		return keep
+
+	def	fconsider( self, f ):
+		keep = False
+		try:
+			st = os.fstat( f )
+			inode = ( st.st_dev, st.st_ino )
+			if inode not in self.inodes:
+				self.inodes[ inode ] = True
+				keep = True
+		except Exception, e:
+			pass
+		return keep
 
 class	AttrDict( dict ):
 
@@ -321,8 +321,13 @@ class	UnpackAll( object ):
 			except Exception, e:
 				print >>sys.stderr, 'Cannot set umask'
 				print >>sys.stderr, traceback.format_exc()
-			walker = Walker()
-			for rootdir,dirs,files in walker.walk( where ):
+			inode_check = InodeCheck()
+			for rootdir,dirs,files in os.walk( where ):
+				# Make sure we haven't visited these directories before
+				for dir in dirs:
+					path = os.path.join( rootdir, dir )
+					if not inode_check.consider( path ):
+						dirs.remove( dir )
 				# Change directories first
 				perm = (
 					stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC |
@@ -350,23 +355,30 @@ class	UnpackAll( object ):
 					0
 				)
 				for name in sorted( files ):
-					pn = os.path.join( rootdir, name )
-					try:
-						self._chatter(
-							'File {0} new permissions: {1:04o}'.format(
-								pn,
-								perm
+					path = os.path.join( rootdir, name )
+					if inode_check.consider( path ):
+						try:
+							self._chatter(
+								'File {0} new permissions: {1:04o}'.format(
+									path,
+									perm
+								)
 							)
-						)
-						os.chmod( pn, perm )
-					except Exception, e:
-						pass
+							os.chmod( path, perm )
+						except Exception, e:
+							pass
 		if self.variant.md5:
 			self._chatter( 'Scanning for MD5 checksum files.' )
-			walker = Walker()
+			inode_check = InodeCheck()
 			for rootdir,dirs,files in walker.walk( where ):
+				# Elide visited directories
+				for dir in dirs:
+					path = os.path.join( rootdir, dir )
+					if not inode_check.consider( path ):
+						dirs.remove( dir )
+				# Get list of md5sum(1) files
 				mf5sums = [
-					f for f in files if f.endswith( '.md5' )
+					name for name in files if name.endswith( '.md5' )
 				]
 				for md5sum in md5sums:
 					err = True
@@ -432,16 +444,26 @@ class	UnpackAll( object ):
 					'--',
 				],
 			})
-			walker = Walker()
-			for rootdir,dirs,files in walker.walk( where ):
+			inode_check = InodeCheck()
+			for rootdir,dirs,files in os.walk( where ):
+				# Ignore already-visited directories
+				for dir in dirs:
+					path = os.path.join( rootdir, dir )
+					if not inode_check.consider( path ):
+						dirs.remove( dir )
+				#
 				cmd = None
 				for file in files:
+					#
 					for suffix in suffixes:
 						if file.endswith( suffix ):
-							cmd = suffixes[suffix] + [
-								os.path.join( where, file )
-							]
-							break
+							# Ignore already-visited files
+							path = os.path.join( rootdir, file )
+							if inode_check.consider( path ):
+								cmd = suffixes[suffix] + [
+									os.path.join( where, file )
+								]
+								break
 				if cmd:
 					err = True
 					try:
