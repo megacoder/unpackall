@@ -42,7 +42,7 @@ install-alias::
 	for a in ${ALIASES}; do						\
 		case "$${a}" in						\
 		default | untar )	;;				\
-		* ) /bin/ln -svf ./untar "$${a}";;			\
+		* ) /bin/ln -sf ./untar "$${a}";;			\
 		esac;							\
 	done
 
