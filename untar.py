@@ -271,6 +271,9 @@ class	UnpackAll( object ):
 							# method is for baby-training-wheels MSDOS
 							root = name.find( '.tgz' )
 						if root < 0: continue
+						# Don't let a foo.tar.md5 file sneak past
+						if root.endswith( '.md5' ): continue
+						# OK, fire when ready
 						self._chatter(
 							'Detected tar archive {0}'.format( name )
 						)
