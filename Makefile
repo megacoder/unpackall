@@ -14,6 +14,8 @@ endif
 
 .PHONY: ${TARGETS} ${SUBDIRS}
 
+${TARGET}::
+
 all::	untar.py sample.tar.gz sample.tar.gz.md5
 
 ${TARGETS}::
@@ -25,16 +27,17 @@ ARGS	= sample.tar.gz
 check::	untar.py
 	./untar.py ${ARGS}
 
-install:: untar.py
+install:: install-bin install-alias
+
+install-bin:: untar.py
 	${INSTALL} -D untar.py ${BINDIR}/untar
-	${MAKE} TARGET=alias
 
 ALIASES	:= $(shell python ./untar.py --alias)
 
 vars::
 	echo "ALIASES=${ALIASES}"
 
-alias::
+install-alias::
 	cd "${BINDIR}";							\
 	for a in ${ALIASES}; do						\
 		case "$${a}" in						\
@@ -43,8 +46,13 @@ alias::
 		esac;							\
 	done
 
-uninstall::
-	cd "${BINDIR}" && ${RM} untar ${ALIASES}
+uninstall:: uninstall-bin uninstall-alias
+
+uninstall-bin::
+	${RM} ${BINDIR}/untar
+
+uninstall-alias::
+	cd "${BINDIR}" && ${RM} ${ALIASES}
 
 .PHONY:	sample
 
