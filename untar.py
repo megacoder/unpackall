@@ -9,6 +9,35 @@ import	subprocess
 import	sys
 import	traceback
 
+class	Walker( object ):
+
+	def	__init__( self ):
+		pass
+
+	def	walk(
+		self, top, topdown = True, onerror = None, followlinks = False
+	 ):
+		inodes = dict()
+		for rootdir,dirs,files in os.walk(
+			top,
+			topdown     = topdown,
+			onerror     = onerror,
+			followlinks = followlinks
+		):
+			for dir in dirs:
+				dn = os.path.join( rootdir, dir )
+				try:
+					st = os.stat( dn )
+				except Exception, e:
+					continue
+				inode = ( st.st_dev, st.st_ino )
+				if inode in inodes:
+					dirs.remove( dir )
+				else:
+					inodes[ inode ] = 0
+			yield rootdir,dirs,files
+		return
+
 class	AttrDict( dict ):
 
 	def	__init__( self, *args, **kwargs ):
@@ -292,7 +321,8 @@ class	UnpackAll( object ):
 			except Exception, e:
 				print >>sys.stderr, 'Cannot set umask'
 				print >>sys.stderr, traceback.format_exc()
-			for rootdir,dirs,files in os.walk( where ):
+			walker = Walker()
+			for rootdir,dirs,files in walker.walk( where ):
 				# Change directories first
 				perm = (
 					stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC |
@@ -333,7 +363,8 @@ class	UnpackAll( object ):
 						pass
 		if self.variant.md5:
 			self._chatter( 'Scanning for MD5 checksum files.' )
-			for rootdir,dirs,files in os.walk( where ):
+			walker = Walker()
+			for rootdir,dirs,files in walker.walk( where ):
 				mf5sums = [
 					f for f in files if f.endswith( '.md5' )
 				]
@@ -401,7 +432,8 @@ class	UnpackAll( object ):
 					'--',
 				],
 			})
-			for rootdir,dirs,files in os.walk( where ):
+			walker = Walker()
+			for rootdir,dirs,files in walker.walk( where ):
 				cmd = None
 				for file in files:
 					for suffix in suffixes:
