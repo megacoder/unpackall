@@ -493,7 +493,7 @@ class	UnpackAll( object ):
 				'/bin/gzip',
 				'--decompress',
 				'--force',
-				'--keep',
+#				'--keep',		# Doesn't have this, but should
 				'--quiet',
 				'--',
 			],
