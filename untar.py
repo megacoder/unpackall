@@ -95,42 +95,42 @@ class	UnpackAll( object ):
 	VARIANTS = dict(
 		default = AttrDict(
 			prefix  = 'DUNNO',
-			glob    = re.compile( r'.*' ),
+			glob    = re.compile( r'^.*$' ),
 			explode = True,
 			md5     = True,
 			info    = 'anonymous tarball'
 		),
 		unosw = AttrDict(
 			prefix  = 'UNOSW',
-			glob    = re.compile( r'osw.*tar.*' ),
+			glob    = re.compile( r'^osw.*tar.*$' ),
 			explode = True,
 			md5     = True,
 			info    = 'OSWatcher tarball'
 		),
 		unarchive = AttrDict(
 			prefix	= 'ARCHIVE',
-			glob    = re.compile( r'.*tar.*' ),
+			glob    = re.compile( r'^.*tar.*$' ),
 			explode = True,
 			md5		= True,
 			info	= 'OSWatcher archives'
 		),
 		unsos = AttrDict(
 			prefix  = 'SOS',
-			glob    = re.compile( r'sosreport.*tar.*' ),
+			glob    = re.compile( r'^sosreport.*tar.*$' ),
 			explode = True,
 			md5		= True,
 			info	= 'SOSREPORT archives'
 		),
 		unvmpinfo = AttrDict(
 			prefix  = 'VMPINFO',
-			glob    = re.compile( r'.*vmpinfo.*tar.*' ),
+			glob    = re.compile( r'^.*vmpinfo.*tar.*$' ),
 			explode = True,
 			md5		= True,
 			info	= 'VMPINFO3 archive'
 		),
 		untar = AttrDict(
 			prefix  = 'UNTAR',
-			glob    = re.compile( r'.*tar.*' ),
+			glob    = re.compile( r'^.*tar.*$' ),
 			explode = True,
 			md5		= True,
 			info	= 'generic tar(1) archive'
