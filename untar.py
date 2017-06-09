@@ -367,6 +367,7 @@ class	UnpackAll( object ):
 				'/bin/tar',
 				'-C',
 				where,
+				'--exclude=dev/*',	# Try avoiding device special nodes
 				'-m',
 				'-x{0}{1}f'.format(
 					method,
