@@ -56,11 +56,12 @@ class	InodeCheck( object ):
 
 class	Walker( object ):
 
-	def	__init__( self, callback = None ):
+	def	__init__( self, callback = None, regex = None ):
 		self.callback = callback
+		self.regex     = regex
 		return
 
-	def	walk( self, origin, glob = None ):
+	def	walk( self, origin ):
 		inode_check = InodeCheck()
 		for root, dirs, files in os.walk( origin ):
 			# Purge directories we've visited before
@@ -70,14 +71,11 @@ class	Walker( object ):
 					dirs.remove( dir )
 			# Apply glob filtering to the filenames, directory
 			# name are not checked.
-			if glob:
-				pattern = re.compile( glob )
-			else:
-				pattern = self.variant.glob
-			files = [
-				# Glob the filenames
-				name for name in files if pattern.search( name )
-			]
+			if self.regex:
+				files = [
+					# Glob the filenames, return only passes
+					name for name in files if self.regex.search( name )
+				]
 			# Offer this up to caller
 			yield root, dirs, files
 		return
@@ -170,7 +168,7 @@ class	UnpackAll( object ):
 		with nested_break() as TopLevel:
 			if os.path.isdir( name ):
 				# Recurse into directories.  Filesystem loops are avoided
-				walker = Walker()
+				walker = Walker( regex = self.variant.glob )
 				for root, dirs, files in walker.walk( name ):
 					for file in files:
 						path   = os.path.join( root, file )
