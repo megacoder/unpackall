@@ -574,6 +574,10 @@ class	UnpackAll( object ):
 				None
 			)
 		else:
+			where = os.path.join(
+				self.variant.prefix,
+				where,
+			)
 			self._chatter(
 				'Creating result tree {0}'.format( where )
 			)
@@ -598,7 +602,7 @@ class	UnpackAll( object ):
 		return where, err
 
 	def	report( self ):
-		# print '[E N D ]'
+		# print '[ E N D ]'
 		return
 
 
