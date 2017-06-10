@@ -176,15 +176,18 @@ class	UnpackAll( object ):
 						err    = self.err_append( err, retval )
 						if err:
 							raise TopLevel
-			elif os.path.isfile( name ):
-				if name.endswith( '.md5' ):
-					# Check file associated with this MD5SUM check file
-					# if there is any interest in that sort of thing.
-					if self.variant.md5:
-						retval = self._do_md5sum( name )
-						err = self.err_append( err, retval )
-						if err:
-							raise TopLevel
+				return err
+			# Only ordinary files beyond this point
+			if not os.path.isfile( name ):
+				return err
+			if name.endswith( '.md5' ):
+				# Check file associated with this MD5SUM check file
+				# if there is any interest in that sort of thing.
+				if self.variant.md5:
+					retval = self._do_md5sum( name )
+					err = self.err_append( err, retval )
+					if err:
+						raise TopLevel
 			elif name.endswith( '.zip' ):
 				if self.variant.explode:
 					where = name[:-4]
@@ -506,8 +509,10 @@ class	UnpackAll( object ):
 			],
 		})
 		err = None
-		walker = Walker()
-		for root, dirs, files in walker.walk( where, glob = 'osw*' ):
+		walker = Walker(
+			re.compile( r'^osw.*$' )
+		)
+		for root, dirs, files in walker.walk( where ):
 			self._chatter(
 				'Scanning {0} for compressed OSWatcher files.'.format(
 					where
@@ -584,12 +589,12 @@ class	UnpackAll( object ):
 				if self.perms:
 					self._do_chmod( where )
 				if self.variant.explode:
-					self._explode_dat( self, where )
+					self._explode_dat( where )
 				self._chatter(
 					'Processing extracted dir {0}'.format( where )
 				)
 				retval = self.process( where )
-				err    = self.err_append( retval )
+				err    = self.err_append( err, retval )
 		return where, err
 
 	def	report( self ):
