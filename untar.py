@@ -102,7 +102,7 @@ class	UnpackAll( object ):
 		),
 		unosw = AttrDict(
 			prefix  = 'UNOSW',
-			glob    = re.compile( r'^osw.*tar.*$' ),
+			glob    = re.compile( r'^osw.*tar.*$', re.IGNORECASE  ),
 			explode = True,
 			md5     = True,
 			info    = 'OSWatcher tarball'
@@ -116,14 +116,14 @@ class	UnpackAll( object ):
 		),
 		unsos = AttrDict(
 			prefix  = 'SOS',
-			glob    = re.compile( r'^sosreport.*tar.*$' ),
+			glob    = re.compile( r'^sosreport.*tar.*$', re.IGNORECASE  ),
 			explode = True,
 			md5		= True,
 			info	= 'SOSREPORT archives'
 		),
 		unvmpinfo = AttrDict(
 			prefix  = 'VMPINFO',
-			glob    = re.compile( r'^.*vmpinfo.*tar.*$' ),
+			glob    = re.compile( r'^.*vmpinfo.*tar.*$', re.IGNORECASE  ),
 			explode = True,
 			md5		= True,
 			info	= 'VMPINFO3 archive'
