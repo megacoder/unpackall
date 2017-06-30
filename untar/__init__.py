@@ -229,13 +229,20 @@ class	UnpackAll( object ):
 				pass
 		return err
 
-	def	print_lines( self, err, is_err = False ):
-		if is_err:
-			fmt = '*** {0}'
-		else:
-			fmt = '    {0}'
-		for line in err.splitlines():
-			print fmt.format( line.rstrip() )
+	def	print_lines( self, lines, is_err = False ):
+		if lines:
+			if isinstance( lines, str ):
+				lines = [ lines ]
+			elif isinstance( lines, dict ):
+				lines = '\n'.join([
+					lines[key] for key in lines
+				])
+			if is_err:
+				fmt = '*** {0}'
+			else:
+				fmt = '    {0}'
+			for line in lines.splitlines():
+				print fmt.format( line.rstrip() )
 		return
 
 	def	get_variants( self ):
@@ -343,7 +350,11 @@ class	UnpackAll( object ):
 		err    = None
 		output = None
 		try:
-			output = subprocess.check_output( cmd )
+			output = subprocess.check_call(
+				cmd,
+				stderr = subprocess.STDOUT,
+				shell  = False
+			)
 #		except subprocess.CalledProcessError, e:
 #			output = e.output
 		except Exception, e:
