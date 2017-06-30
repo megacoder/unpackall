@@ -615,7 +615,7 @@ if __name__ == '__main__':
 	prog, _ = os.path.splitext(
 		os.path.basename( sys.argv[0] )
 	)
-	version  = '1.0.0'
+	version  = '1.0.2'
 	ua       = UnpackAll( variant = prog )
 	variants = ua.get_variants()
 	class	UntarParser( OptionParser ):
@@ -624,7 +624,7 @@ if __name__ == '__main__':
 	ua = None
 	p = UntarParser(
 		prog    = prog,
-		version = version,
+		version = 'v{0}'.format( version ),
 		usage   = '{0} [options] [tar ..]'.format( prog ),
 		epilog = '\n'.join(
 			[ '', 'The available variants are:' ] +
