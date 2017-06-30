@@ -102,7 +102,7 @@ class	UnpackAll( object ):
 		),
 		unosw = AttrDict(
 			prefix  = 'UNOSW',
-			glob    = re.compile( r'^osw.*tar.*$', re.IGNORECASE  ),
+			glob    = re.compile( r'^osw.*tar.*$' ),
 			explode = True,
 			md5     = True,
 			info    = 'OSWatcher tarball'
@@ -116,14 +116,14 @@ class	UnpackAll( object ):
 		),
 		unsos = AttrDict(
 			prefix  = 'SOS',
-			glob    = re.compile( r'^sosreport.*tar.*$', re.IGNORECASE  ),
+			glob    = re.compile( r'^sosreport.*tar.*$' ),
 			explode = True,
 			md5		= True,
 			info	= 'SOSREPORT archives'
 		),
 		unvmpinfo = AttrDict(
 			prefix  = 'VMPINFO',
-			glob    = re.compile( r'^.*vmpinfo.*tar.*$', re.IGNORECASE  ),
+			glob    = re.compile( r'^.*vmpinfo.*tar.*$' ),
 			explode = True,
 			md5		= True,
 			info	= 'VMPINFO3 archive'
@@ -231,12 +231,6 @@ class	UnpackAll( object ):
 
 	def	print_lines( self, lines, is_err = False ):
 		if lines:
-			if isinstance( lines, str ):
-				lines = [ lines ]
-			elif isinstance( lines, dict ):
-				lines = '\n'.join([
-					lines[key] for key in lines
-				])
 			if is_err:
 				fmt = '*** {0}'
 			else:
@@ -352,13 +346,12 @@ class	UnpackAll( object ):
 		try:
 			output = subprocess.check_call(
 				cmd,
-				stderr = subprocess.STDOUT,
-				shell  = False
+				stderr = subprocess.STDOUT
 			)
 #		except subprocess.CalledProcessError, e:
 #			output = e.output
 		except Exception, e:
-			err = self_err_append(
+			err = self.err_append(
 				'% {0}'.format( ' '.join( cmd ) ),
 				traceback.format_exc(),
 			)
@@ -616,12 +609,13 @@ class	UnpackAll( object ):
 		# print '[ E N D ]'
 		return
 
-def	main():
-	import	version
+
+if __name__ == '__main__':
 	from	optparse	import	OptionParser
 	prog, _ = os.path.splitext(
 		os.path.basename( sys.argv[0] )
 	)
+	version  = '1.0.0'
 	ua       = UnpackAll( variant = prog )
 	variants = ua.get_variants()
 	class	UntarParser( OptionParser ):
@@ -630,7 +624,7 @@ def	main():
 	ua = None
 	p = UntarParser(
 		prog    = prog,
-		version = version.Version,
+		version = version,
 		usage   = '{0} [options] [tar ..]'.format( prog ),
 		epilog = '\n'.join(
 			[ '', 'The available variants are:' ] +
@@ -730,7 +724,3 @@ def	main():
 			ua.print_lines( err, is_err = True )
 	ua.report()
 	exit( 0 )
-
-
-if __name__ == '__main__':
-	main()
