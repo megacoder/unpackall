@@ -1,3 +1,54 @@
+2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+
+	* untar.py: Changed "ie_error" to "is_error" and compute version
+	string
+
+2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+
+	* untar.py: Recovered from foolishness of setuptools.
+
+2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+
+	* untar/__init__.py => untar.py: Checkpoint
+
+2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+
+	* untar.py, untar/__init__.py: Allow print_lines() to accept simple
+	string or a dictionary of strings too.
+
+2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+
+	* untar/__init__.py: Typo in error param name.
+
+2017-06-23  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+
+	* untar.py: Now ignoring filename case.
+
+2017-06-10  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+
+	* untar.py: Prepend variant.prefix to extraction path.
+
+2017-06-10  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+
+	* untar.py: Self-consistent, anyway.
+
+2017-06-09  Tommy Reynolds <Tommy.Reynolds@MegaCoder.com>
+
+	* untar.py: Anchored glob's
+
+2017-06-09  Tommy Reynolds <Tommy.Reynolds@MegaCoder.com>
+
+	* untar.py: Promote API compilance
+
+2017-06-09  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+
+	* untar.py: Try to avoid anything looking like a device special node
+	"dev/*" files
+
+2017-06-01  Tommy Reynolds <Tommy.Reynolds@MegaCoder.com>
+
+	* ChangeLog: History
+
 2017-06-01  Tommy Reynolds <Tommy.Reynolds@MegaCoder.com>
 
 	* untar.py: Oddly enough, gunzip(1) lacks the "--keep" switch and
