@@ -616,7 +616,7 @@ if __name__ == '__main__':
 	prog, _ = os.path.splitext(
 		os.path.basename( sys.argv[0] )
 	)
-	version  = '1.0.2'
+	version  = '1.0.3'
 	ua       = UnpackAll( variant = prog )
 	variants = ua.get_variants()
 	class	UntarParser( OptionParser ):
