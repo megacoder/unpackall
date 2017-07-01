@@ -373,6 +373,7 @@ class	UnpackAll( object ):
 				'-C',
 				where,
 				'--exclude=dev/*',	# Try avoiding device special nodes
+				'--sparse',			# Handle sparse files like /v/l/lastlog
 				'-m',
 				'-x{0}{1}f'.format(
 					method,
