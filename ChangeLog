@@ -1,79 +1,57 @@
-2017-07-01  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+* Sat Jul 1 2017 Tommy Reynolds
+- (484ac69) Changes (HEAD -> master, github/master, github/HEAD)
 
-	* untar.py: Bunped version
+* Sat Jul 1 2017 Tommy Reynolds
+- (05eb97f) Bunped version (tag: v1.0.3)
 
-2017-07-01  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+* Sat Jul 1 2017 Tommy Reynolds
+- (9683cac) Handle sparse files more reasonably, instead of ignoring it.
 
-	* untar.py: Handle sparse files more reasonably, instead of ignoring
-	it.
+* Fri Jun 30 2017 Tommy Reynolds
+- (b990035) Stuff is happening all the time. (tag: v1.0.2)
 
-2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+* Fri Jun 30 2017 Tommy Reynolds
+- (c09359a) Changed "ie_error" to "is_error" and compute version string
 
-	* ChangeLog: Stuff is happening all the time.
+* Fri Jun 30 2017 Tommy Reynolds
+- (ba1db1a) Recovered from foolishness of setuptools.
 
-2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+* Fri Jun 30 2017 Tommy Reynolds
+- (40002be) Checkpoint
 
-	* untar.py: Changed "ie_error" to "is_error" and compute version
-	string
+* Fri Jun 30 2017 Tommy Reynolds
+- (da33cfd) Allow print_lines() to accept simple string or a dictionary of strings too.
 
-2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+* Fri Jun 30 2017 Tommy Reynolds
+- (80ee56b) Typo in error param name.
 
-	* untar.py: Recovered from foolishness of setuptools.
+* Fri Jun 23 2017 Tommy Reynolds
+- (d533894) Now ignoring filename case.
 
-2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+* Sat Jun 10 2017 Tommy Reynolds
+- (a9b7a94) Prepend variant.prefix to extraction path.
 
-	* untar/__init__.py => untar.py: Checkpoint
+* Sat Jun 10 2017 Tommy Reynolds
+- (bf361cc) Self-consistent, anyway.
 
-2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+* Fri Jun 9 2017 Tommy Reynolds
+- (0d83589) Anchored glob's (local/master)
 
-	* untar.py, untar/__init__.py: Allow print_lines() to accept simple
-	string or a dictionary of strings too.
+* Fri Jun 9 2017 Tommy Reynolds
+- (b0a449e) Promote API compilance
 
-2017-06-30  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+* Fri Jun 9 2017 Tommy Reynolds
+- (a93918c) Try to avoid anything looking like a device special node "dev/*" files
 
-	* untar/__init__.py: Typo in error param name.
+* Thu Jun 1 2017 Tommy Reynolds
+- (6d48ffa) History (tag: v1.0.1)
 
-2017-06-23  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
+* Thu Jun 1 2017 Tommy Reynolds
+- (9c34332) Oddly enough, gunzip(1) lacks the "--keep" switch and even more oddly, I am uninterested in playing stdin/stdout redirect games to side-step this.
 
-	* untar.py: Now ignoring filename case.
+* Thu Jun 1 2017 Tommy Reynolds
+- (a3546a2) Baseline (tag: v1.0.0)
 
-2017-06-10  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
-
-	* untar.py: Prepend variant.prefix to extraction path.
-
-2017-06-10  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
-
-	* untar.py: Self-consistent, anyway.
-
-2017-06-09  Tommy Reynolds <Tommy.Reynolds@MegaCoder.com>
-
-	* untar.py: Anchored glob's
-
-2017-06-09  Tommy Reynolds <Tommy.Reynolds@MegaCoder.com>
-
-	* untar.py: Promote API compilance
-
-2017-06-09  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
-
-	* untar.py: Try to avoid anything looking like a device special node
-	"dev/*" files
-
-2017-06-01  Tommy Reynolds <Tommy.Reynolds@MegaCoder.com>
-
-	* ChangeLog: History
-
-2017-06-01  Tommy Reynolds <Tommy.Reynolds@MegaCoder.com>
-
-	* untar.py: Oddly enough, gunzip(1) lacks the "--keep" switch and
-	even more oddly, I am uninterested in playing stdin/stdout redirect
-	games to side-step this.
-
-2017-06-01  Tommy Reynolds <Oldest.Software.Guy@gmail.com>
-
-	* Makefile, sample.tar.gz.md5, sample/files, sample/files.md5,
-	untar.py: Baseline
-
-2017-06-01  Tommy Reynolds <oldest.software.guy@gmail.com>
-
-	* Initial commit
+* Thu Jun 1 2017 Tommy Reynolds
+- (01fb745) Initial commit
 
