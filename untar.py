@@ -164,30 +164,29 @@ class	UnpackAll( object ):
 		return fmt.format( err, more )
 
 	def	process( self, name, cleanup = True ):
-		err = None
+		errors = []
 		with nested_break() as TopLevel:
 			if os.path.isdir( name ):
 				# Recurse into directories.  Filesystem loops are avoided
 				walker = Walker( regex = self.variant.glob )
 				for root, dirs, files in walker.walk( name ):
 					for file in files:
-						path   = os.path.join( root, file )
-						retval = self.process( path )
-						err    = self.err_append( err, retval )
-						if err:
+						path     = os.path.join( root, file )
+						problems = self.process( path )
+						if problems:
+							errors += problems
 							raise TopLevel
-				return err
+				raise TopLevel
 			# Only ordinary files beyond this point
 			if not os.path.isfile( name ):
-				return err
+				raise TopLevel
 			if name.endswith( '.md5' ):
 				# Check file associated with this MD5SUM check file
 				# if there is any interest in that sort of thing.
 				if self.variant.md5:
-					retval = self._do_md5sum( name )
-					err = self.err_append( err, retval )
-					if err:
-						raise TopLevel
+					problems = self._do_md5sum( name )
+					if problems:
+						errors += problems
 			elif name.endswith( '.zip' ):
 				if self.variant.explode:
 					where = name[:-4]
@@ -197,46 +196,59 @@ class	UnpackAll( object ):
 						where,
 						name
 					]
-					output, retval = self._run( cmd )
-					err = self.err_append( err, retval )
-					if cleanup and not err:
+					results = self._run( cmd )
+					if results.errno:
+						errors += results.stderr
+					elif cleanup:
 						cmd = [
 							'/bin/rm',
 							'-f',
 							name
 						]
-						_, retval = self._run( cmd, show = False )
-						err = self.err_append( err, retval )
+						results = self._run( cmd, show = False )
+						if results.errno:
+							errors += results.stderr
 			elif name.endswith( '.tgz' ):
 				where = name[:-4]
-				_, retval = self._explode_tarball( name, where )
-				err = self.err_append( err, retval )
-				if cleanup and not err:
+				problems = self._explode_tarball( name, where )
+				if problems:
+					errors += problems
+				elif cleanup:
 					cmd = [
 						'/bin/rm',
 						'-f',
 						name
 					]
-					_, retval = self._run( cmd )
-					err = self.err_append( err, retval )
+					results = self._run( cmd )
+					if results.errno:
+						errors += results.stderr
+			elif name.endswith( '.7z' ):
+				problems = [
+					'cannot do 7z archives yet'
+				]
+				errors += problems
 			elif name.find( '.tar' ) > -1:
 				e = name.find( '.tar' )
 				where = name[:e]
-				_, retval = self._explode_tarball( name, where )
-				err = self.err_append( err, retval )
+				problems = self._explode_tarball( name, where )
+				if problems:
+					errors += problems
 			else:
 				# Ignore this file.
 				pass
-		return err
+		return errors if len(errors) else None
 
-	def	print_lines( self, lines, is_err = False ):
-		if lines:
+	def	print_lines( self, items, is_err = False ):
+		if items:
 			if is_err:
 				fmt = '*** {0}'
 			else:
 				fmt = '    {0}'
-			for line in lines.splitlines():
-				print fmt.format( line.rstrip() )
+			if not isinstance( items, list ):
+				items = [ str(items) ]
+			for item in items:
+				for line in item.splitlines():
+					print fmt.format( line )
 		return
 
 	def	get_variants( self ):
@@ -331,7 +343,6 @@ class	UnpackAll( object ):
 			result = None
 		return result
 
-
 	def	_run( self, cmd, show = True ):
 		if show or self.is_verbose():
 			cli = ' '.join( cmd )
@@ -341,29 +352,47 @@ class	UnpackAll( object ):
 		if self.dry_run:
 			cmd = [ '/bin/echo' ] + cmd
 		#
-		err    = None
-		output = None
+		results = AttrDict({
+			'errno'  : -1,
+			'stdout' : None,
+			'stderr' : None,
+		})
 		try:
-			output = subprocess.check_call(
+			po = subprocess.Popen(
 				cmd,
-				stderr = subprocess.STDOUT
+				bufsize = 4 * resource.getpagesize(),
+				stdout = subprocess.PIPE,
+				stderr = subprocess.PIPE,
 			)
-#		except subprocess.CalledProcessError, e:
-#			output = e.output
+			output, err    = po.communicate()
+			results.errno  = po.returncode
+			if len(output):
+				results.stdout = output.splitlines()
+			if len(err):
+				results.stderr = err.splitlines()
 		except Exception, e:
-			err = self.err_append(
-				'% {0}'.format( ' '.join( cmd ) ),
-				traceback.format_exc(),
-			)
+			why = [ '$ {0}'.format( ' '.join( cmd ) ) ] + traceback.format_exc().splitlines()
+			if results.stderr:
+				results.stderr += why
+			else:
+				results.stderr = why
 		if show:
-			if output:
-				self.print_lines( output )
-			if err:
-				self.print_lines( err, is_err = True )
-		return output, err
+			if results.stdout:
+				self.print_lines( results.stdout )
+			if results.errno:
+				self.print_lines(
+					'{0}; errno={1}'.format(
+						os.strerror( results.errno ),
+						errno,
+					),
+					is_err = True
+				)
+			if results.stderr:
+				self.print_lines( results.stderr, is_err = True )
+		return results
 
 	def	_do_untar( self, tn, where ):
-		err = '_do_untar( {0}, {1} )'.format( tn, where )
+		wrong = True
 		# Try all known uncompress options.  The "auto" (a) option should
 		# work in most cases but can fail if the tarball name has been
 		# mangled.  As a last resort, maybe it's a plain tarball.
@@ -381,15 +410,22 @@ class	UnpackAll( object ):
 				),
 				tn
 			]
-			msg, err = self._run( cmd, show = False )
+			results = self._run( cmd, show = False )
 			if self.verbose:
-				self.print_lines( msg )
-			if not err:
+				self.print_lines( results.stdout )
+			if results.errno == 0:
+				wrong = False
 				break
-		return where, err
+		return wrong
 
 	def	_do_md5sum( self, name ):
-		err = None
+		if not name.endswith( '.md5' ):
+			raise ValueError(
+				'file {0} does not end with ".md5" as expected'.format(
+					name
+				)
+			)
+		errors = []
 		with nested_break() as TopLevel:
 			# Drop the extention to derive the subject file name
 			subject, _ = os.path.splitext( name )
@@ -397,18 +433,20 @@ class	UnpackAll( object ):
 				'Checking {0} against {1}'.format( subject, name )
 			)
 			# Calculate MD5sum of the subject file
-			nbytes = 3 * resource.getpagesize()
+			chunksize = 3 * resource.getpagesize()
 			try:
 				hash = hashlib.md5()
 				with open( subject, 'rb' ) as f:
-					for chunk in iter( f.read, nbytes ):
+					for chunk in iter( f.read, chunksize ):
 						hash.update( chunk )
 				calc_hash = hash.hexdigest()
 			except Exception, e:
-				err = 'cannot compute md5sum for "{0}"\n{1}'.format(
-					subjext,
-					traceback.format_exc()
-				)
+				errors += [
+					'cannot compute md5sum for "{0}"'.format(
+						subjext
+					)
+				]
+				errors += traceback.format_exc().splitlines()
 				raise TopLevel
 			# Read the first (and only) digest string from MD5SUM file.
 			# It should be a single file with one or two fields.  The
@@ -417,13 +455,12 @@ class	UnpackAll( object ):
 				with open( name ) as f:
 					tokens = f.readline().split()
 			except Exception, e:
-				err = self.err_append(
-					err,
-					'cannot get md5sum from "{0}"\n{1}'.format(
-						name,
-						traceback.format_exc()
+				errors += [
+					'cannot get md5sum from "{0}"'.format(
+						name
 					)
-				)
+				]
+				errors += traceback.format_exc().splitlines()
 				raise TopLevel
 			# If md5 file is correctly formed, compare the md5 sums
 			if len(tokens):
@@ -436,20 +473,18 @@ class	UnpackAll( object ):
 					)
 				)
 				if calc_hash.lower() != digest.lower():
-					err = self.err_append(
-						err,
+					errors += [
 						'  *** {0}'.format(
 							'MD5 checksum differs: "{0}"'.format(
 								subject
 							)
 						)
-					)
+					]
 					raise TopLevel
-				err = None
-		return err
+		return errors if len(errors) else None
 
 	def	_do_chmod( self, where ):
-		err = None
+		errors = []
 		walker = Walker()
 		for rootdir,dirs,files in walker.walk( where ):
 			# Change directory permissions first
@@ -472,8 +507,9 @@ class	UnpackAll( object ):
 					'0777',
 					pn
 				]
-				_, retval = self._run( cmd )
-				err = self.err_append( err, retval )
+				results = self._run( cmd )
+				if results.errno:
+					errors += results.stderr
 			# Change files last
 			for name in sorted( files ):
 				path = os.path.join( rootdir, name )
@@ -482,9 +518,10 @@ class	UnpackAll( object ):
 					'0660',
 					path
 				]
-				_, retval = self._run( cmd )
-				err = self.err_append( err, retval )
-		return err
+				results = self._run( cmd )
+				if results.errno:
+					errors += results.stderr
+		return errors if len(errors) else None
 
 	def	_explode_dat( self, where ):
 		suffixes = dict({
@@ -513,7 +550,7 @@ class	UnpackAll( object ):
 				'--',
 			],
 		})
-		err = None
+		errors = []
 		walker = Walker(
 			re.compile( r'^osw.*$' )
 		)
@@ -530,13 +567,12 @@ class	UnpackAll( object ):
 					cmd = suffixes[ext] + [
 						os.path.join( where, file )
 					]
-					output, retval = self._run( cmd )
-					err = self.err_append( err, retval )
-					if err:
-						break
-		if err:
-			self.print_lines( err, is_err = True )
-		return
+					results = self._run( cmd )
+					if results.errno:
+						errors += results.stderr
+		if len(errors):
+			self.print_lines( errors, is_err = True )
+		return errors if len(errors) else None
 
 	def	chmod( self, where ):
 		""" This is a courtesy only.  No huhu if no worky. """
@@ -549,7 +585,7 @@ class	UnpackAll( object ):
 					'0777',
 					dir
 				]
-				_, _ = self._run( cmd )
+				results = self._run( cmd )
 			#
 			for file in files:
 				cmd = [
@@ -557,7 +593,7 @@ class	UnpackAll( object ):
 					'0777',
 					file
 				]
-				_, _ = self._run( cmd )
+				results = self._run( cmd )
 		return
 
 	def	_explode_tarball( self, tarball, where = None ):
@@ -565,7 +601,7 @@ class	UnpackAll( object ):
 			for other tarballs to expand.  The tarball named here is NOT
 			deleted, but any tarballs within this tarball will be expanded
 			and their tarball deleted. """
-		err = None
+		errors = []
 		if not where:
 			# Peel off dull extentions until arrive reasonable dir name
 			i = tarball.find( '.tar' )
@@ -574,10 +610,9 @@ class	UnpackAll( object ):
 			elif tarball.lower().endswith( '.tgz' ):
 				where = tarball[:-4]
 		if not where:
-			err = self.err_append(
-				'cannot deduce wher to unpack {0}'.format( tarball ),
-				None
-			)
+			errors += [
+				'cannot deduce wher to unpack {0}'.format( tarball )
+			]
 		else:
 			where = os.path.join(
 				self.variant.prefix,
@@ -591,20 +626,26 @@ class	UnpackAll( object ):
 				'-p',
 				where
 			]
-			_, _ = self._run( cmd )
-			where, retval = self._do_untar( tarball, where )
-			err = self.err_append( err, retval )
-			if not err:
+			results = self._run( cmd ) # We can ignore these results
+			problems = self._do_untar( tarball, where )
+			if problems:
+				errors += problems
+			else:
 				if self.perms:
-					self._do_chmod( where )
+					problems = self._do_chmod( where )
+					if problems:
+						errors += problems
 				if self.variant.explode:
-					self._explode_dat( where )
+					problems = self._explode_dat( where )
+					if problems:
+						errors += problems
 				self._chatter(
 					'Processing extracted dir {0}'.format( where )
 				)
-				retval = self.process( where )
-				err    = self.err_append( err, retval )
-		return where, err
+				problems = self.process( where )
+				if problems:
+					errors += problems
+		return errors if len(errors) else None
 
 	def	report( self ):
 		# print '[ E N D ]'
