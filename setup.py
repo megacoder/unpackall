@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # vim: noet sw=4 ts=4 filetype=python
 
-from distutils.core import setup
+# from distutils.core import setup
+from	setuptools	import	setup
 
 version = '1.0.5'
 
@@ -22,10 +23,7 @@ setup(
     zip_safe             = False,
     install_requires     = [],
     packages             = [ 'untar' ],
-    entry_points         = {
-        'console_scripts' : [
-            'untar=untar:main'
-        ],
-    },
-    scripts              = [ 'bin/untar' ]
+	scripts = [
+		'scripts/untar',
+	],
 )
