@@ -651,118 +651,116 @@ class	UnpackAll( object ):
 		# print '[ E N D ]'
 		return
 
-
-if __name__ == '__main__':
-	from	optparse	import	OptionParser
-	prog, _ = os.path.splitext(
-		os.path.basename( sys.argv[0] )
-	)
-	version  = '1.0.4'
-	ua       = UnpackAll( variant = prog )
-	variants = ua.get_variants()
-	class	UntarParser( OptionParser ):
-		def	format_epilog( self, formatter ):
-			return self.epilog
-	ua = None
-	p = UntarParser(
-		prog    = prog,
-		version = 'v{0}'.format( version ),
-		usage   = '{0} [options] [tar ..]'.format( prog ),
-		epilog = '\n'.join(
-			[ '', 'The available variants are:' ] +
-			[ '    {0}'.format( v ) for v in sorted( variants ) ] +
-			[ '' ],
-		),
-	)
-	p.add_option(
-		'-a',
-		'--alias',
-		dest = 'only_alias',
-		default = False,
-		action = 'store_true',
-		help = 'list aliases, one per line, and exit'
-	)
-	p.add_option(
-		'-l',
-		'--list',
-		dest    ='verbose',
-		default = False,
-		action  = 'store_true',
-		help    = 'list individual files extracted from a tar(1) archive'
-	)
-	p.add_option(
-		'-m',
-		'--md5',
-		dest = 'want_md5',
-		default = False,
-		action = 'store_true',
-		help = 'use .md5 files to validate extracted files'
-	)
-	p.add_option(
-		'-n',
-		'--dry-run',
-		dest = 'dry_run',
-		default = False,
-		action = 'store_true',
-		help = "show what would be done but don't do it"
-	)
-	p.add_option(
-		'-p',
-		'--perms',
-		dest    ='perms',
-		action  = 'store_true',
-		default = False,
-		help    = 'alter permissions: d=0777, f=0660'
-	)
-	p.add_option(
-		'-r',
-		'--role',
-		dest    ='role',
-		metavar = 'ROLE',
-		default = prog,
-		help    = 'personality; default is "{0}"'.format( prog )
-	)
-	p.add_option(
-		'-u',
-		'--umask',
-		dest    ='umask',
-		metavar = 'NUM',
-		type    = int,
-		default = 0,
-		help    = 'umask(2) value'
-	)
-	p.add_option(
-		'-v',
-		'--verbose',
-		dest = 'verbose',
-		default = False,
-		action = 'store_true',
-		help = 'announce actions being taken'
-	)
-	opts,candidates = p.parse_args()
-	try:
-		# Set a umask(2) to mitigate our default permissions, which are
-		# set to 0777 for all files because this mimics ISDE's misbehavior.
-		os.umask( opts.umask )
-	except Exception, e:
-		raise e(
-			'cannot set umask({0})'.format( opts.umask )
+	def	main( self ):
+		from	optparse	import	OptionParser
+		prog, _ = os.path.splitext(
+			os.path.basename( sys.argv[0] )
 		)
-	ua = UnpackAll( variant = opts.role, verbose = opts.verbose )
-	if opts.only_alias:
-		for variety in ua.get_variants():
-			print '{0}'.format( variety )
-		exit( 0 )
-	ua.set_md5_check( opts.want_md5 )
-	if len(candidates) == 0:
-		candidates = [ '.' ]
-	opts.candidates = candidates
-	for candidate in opts.candidates:
-		# Take care not to delete top-level files but we will
-		# delete any successfully-extracted archives that are
-		# found in the exploded contents under this top-level.
-		err = ua.process( candidate, cleanup = False )
-		if err:
-			ua.print_lines( err, is_err = True )
-	ua.report()
-	exit( 0 )
+		version  = '1.0.4'
+		ua       = UnpackAll( variant = prog )
+		variants = ua.get_variants()
+		class	UntarParser( OptionParser ):
+			def	format_epilog( self, formatter ):
+				return self.epilog
+		ua = None
+		p = UntarParser(
+			prog    = prog,
+			version = 'v{0}'.format( version ),
+			usage   = '{0} [options] [tar ..]'.format( prog ),
+			epilog = '\n'.join(
+				[ '', 'The available variants are:' ] +
+				[ '    {0}'.format( v ) for v in sorted( variants ) ] +
+				[ '' ],
+			),
+		)
+		p.add_option(
+			'-a',
+			'--alias',
+			dest = 'only_alias',
+			default = False,
+			action = 'store_true',
+			help = 'list aliases, one per line, and exit'
+		)
+		p.add_option(
+			'-l',
+			'--list',
+			dest    ='verbose',
+			default = False,
+			action  = 'store_true',
+			help    = 'list individual files extracted from a tar(1) archive'
+		)
+		p.add_option(
+			'-m',
+			'--md5',
+			dest = 'want_md5',
+			default = False,
+			action = 'store_true',
+			help = 'use .md5 files to validate extracted files'
+		)
+		p.add_option(
+			'-n',
+			'--dry-run',
+			dest = 'dry_run',
+			default = False,
+			action = 'store_true',
+			help = "show what would be done but don't do it"
+		)
+		p.add_option(
+			'-p',
+			'--perms',
+			dest    ='perms',
+			action  = 'store_true',
+			default = False,
+			help    = 'alter permissions: d=0777, f=0660'
+		)
+		p.add_option(
+			'-r',
+			'--role',
+			dest    ='role',
+			metavar = 'ROLE',
+			default = prog,
+			help    = 'personality; default is "{0}"'.format( prog )
+		)
+		p.add_option(
+			'-u',
+			'--umask',
+			dest    ='umask',
+			metavar = 'NUM',
+			type    = int,
+			default = 0,
+			help    = 'umask(2) value'
+		)
+		p.add_option(
+			'-v',
+			'--verbose',
+			dest = 'verbose',
+			default = False,
+			action = 'store_true',
+			help = 'announce actions being taken'
+		)
+		opts,candidates = p.parse_args()
+		try:
+			# Set a umask(2) to mitigate our default permissions, which are
+			# set to 0777 for all files because this mimics ISDE's misbehavior.
+			os.umask( opts.umask )
+		except Exception, e:
+			raise e(
+				'cannot set umask({0})'.format( opts.umask )
+			)
+		ua = UnpackAll( variant = opts.role, verbose = opts.verbose )
+		if opts.only_alias:
+			for variety in ua.get_variants():
+				print '{0}'.format( variety )
+			exit( 0 )
+		ua.set_md5_check( opts.want_md5 )
+		if len(candidates) == 0:
+			candidates = [ '.' ]
+		opts.candidates = candidates
+		for candidate in opts.candidates:
+			# Take care not to delete top-level files but we will
+			# delete any successfully-extracted archives that are
+			# found in the exploded contents under this top-level.
+			err = ua.process( candidate, cleanup = False )
+			if err:
+				ua.print_lines( err, is_err = True )
+		ua.report()
