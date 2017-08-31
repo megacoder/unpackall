@@ -4,7 +4,7 @@
 # from distutils.core import setup
 from	setuptools	import	setup
 
-version = '1.0.5'
+version = '1.0.6'
 
 with open( 'untar/version.py', 'wt' ) as f:
     print >>f, "Version = '{0}'".format( version )
