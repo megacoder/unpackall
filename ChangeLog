@@ -1,5 +1,38 @@
+* Thu Aug 31 2017 Tommy Reynolds
+- (32a4ac2) Bumped up (HEAD -> master, github/master, github/HEAD)
+
+* Thu Aug 31 2017 Tommy Reynolds
+- (4c4a4e1) Don't ship generated files
+
+* Thu Aug 31 2017 Tommy Reynolds
+- (173f5dc) Moved main() to be a method under the class
+
+* Thu Aug 31 2017 Tommy Reynolds
+- (46a5d63) Install our own script
+
+* Sun Aug 27 2017 Tommy Reynolds
+- (be6f0ca) Include a changelog
+
+* Sun Aug 27 2017 Tommy Reynolds
+- (1f890d2) Stuff to include
+
+* Sun Aug 27 2017 Tommy Reynolds
+- (427160b) Auto-generate packaging scaffolding
+
+* Sun Aug 27 2017 Tommy Reynolds
+- (27312ed) Merge branch 'popen'
+
+* Sun Aug 27 2017 Tommy Reynolds
+- (cf43bd4) Bump (tag: v1.0.4)
+
+* Sun Aug 27 2017 Tommy Reynolds
+- (dfc42bb) What I did on my summer vacation.
+
+* Sun Aug 27 2017 Tommy Reynolds
+- (c4f04d5) Change from subprocess.check_output() to subprocess.Popen() since ISDE is archaicly stupid.
+
 * Sat Jul 1 2017 Tommy Reynolds
-- (484ac69) Changes (HEAD -> master, github/master, github/HEAD)
+- (484ac69) Changes
 
 * Sat Jul 1 2017 Tommy Reynolds
 - (05eb97f) Bunped version (tag: v1.0.3)
